@@ -1,3 +1,15 @@
+apply plugin: 'java'
+
+
+allprojects {
+ 	repositories {
+	    mavenCentral()
+	 }
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
 jar{
     baseName = 'es.upv.pros.pvalderas.microservices.composition.bpmn.domain'
     version =  '1.0'
