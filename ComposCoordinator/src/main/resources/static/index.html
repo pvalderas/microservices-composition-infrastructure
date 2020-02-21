@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MicroService Compositor</title>
+
+  <link rel="stylesheet" href="vendor/bpmn-js/assets/diagram-js.css" />
+  <link rel="stylesheet" href="vendor/bpmn-js/assets/bpmn-font/css/bpmn-embedded.css" />
+  
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+
+  <style>
+      body, html {
+      height: 100%;
+      width: 100%;
+
+      margin: 0;
+
+      display: flex;
+      flex-direction: column;
+
+      font-family: sans-serif;
+    }
+
+    .modeler-parent {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #modeler-container {
+      flex: 1;
+    }
+
+    #properties-container {
+      overflow-y: auto;
+
+      border-top: solid 2px black;
+      background: #FAFAFA;
+
+      padding: 5px;
+      height: 100px;
+
+      padding-top: 20px;
+    }
+
+     #properties-container fieldset{
+      margin-bottom: 10px;
+      border: solid 1px black;
+    }
+
+    .microservices-dialog{
+      display:none;
+      position:fixed;
+      width:300px;
+      height:400px;
+      bottom:30px;
+      left:400px;
+      border:solid 2px black;
+      background-color:white;
+      overflow-y: auto;
+      z-order:1000;
+    }
+
+    #upload_dialog_container{
+      width:100%;
+      top:200px;
+      position:fixed;
+      display:none;
+    }
+
+    #upload_dialog{
+      display:block;
+      width:600px;
+      margin:0 auto;
+    }
+
+    .titulo{
+      width:100%;
+      text-align:center;
+      font-size: 24px;
+    }
+
+    .microservice-name{
+      text-align: center;
+      font-size: 20px;
+    }
+
+     #send-button{
+      border-top:solid 2px black;
+      border-left:solid 1px black;
+      text-align:center;
+    }
+
+    #send-button button{
+      height:50px;
+      margin-top: 25px;
+    }
+
+    .djs-palette{
+      top:80px !important;
+    }
+
+    .bjs-powered-by{
+      display:none !important;
+    }
+
+
+/*************************************** FIlE *************************/
+    .files input {
+      outline: 2px dashed #92b0b3;
+      outline-offset: -10px;
+      -webkit-transition: outline-offset .15s ease-in-out, background-color .15s linear;
+      transition: outline-offset .15s ease-in-out, background-color .15s linear;
+      padding: 120px 0px 85px 35%;
+      text-align: center !important;
+      margin: 0;
+      width: 100% !important;
+  }
+  .files input:focus{     outline: 2px dashed #92b0b3;  outline-offset: -10px;
+      -webkit-transition: outline-offset .15s ease-in-out, background-color .15s linear;
+      transition: outline-offset .15s ease-in-out, background-color .15s linear; border:1px solid #92b0b3;
+   }
+  .files{ position:relative}
+  .files:after {  pointer-events: none;
+      position: absolute;
+      top: 60px;
+      left: 0;
+      width: 50px;
+      right: 0;
+      height: 56px;
+      content: "";
+      background-image: url(https://image.flaticon.com/icons/png/128/109/109612.png);
+      display: block;
+      margin: 0 auto;
+      background-size: 100%;
+      background-repeat: no-repeat;
+  }
+  .color input{ background-color:#f1f1f1;}
+  .files:before {
+      position: absolute;
+      bottom: 10px;
+      left: 0;  pointer-events: none;
+      width: 100%;
+      right: 0;
+      height: 57px;
+      content: " or drag it here. ";
+      display: block;
+      margin: 0 auto;
+      color: #2ea591;
+      font-weight: 600;
+      text-transform: capitalize;
+      text-align: center;
+  }
+
+/***************************** loader *************************/
+.lds-hourglass {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+.lds-hourglass:after {
+  content: " ";
+  display: block;
+  border-radius: 50%;
+  width: 0;
+  height: 0;
+  margin: 8px;
+  box-sizing: border-box;
+  border: 32px solid white;
+  border-color: white transparent white transparent;
+  animation: lds-hourglass 1.2s infinite;
+}
+@keyframes lds-hourglass {
+  0% {
+    transform: rotate(0);
+    animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+  }
+  50% {
+    transform: rotate(900deg);
+    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+  100% {
+    transform: rotate(1800deg);
+  }
+}
+
+.loader_container{
+  position:absolute;
+  z-index:1000;
+  width:100%;
+  height:100%;
+  background-color: rgba(0,0,0,0.5);
+  margin:0;
+  display:none;
+}
+
+.loader_container div{
+  display:block;
+  margin:0 auto;
+  top:30%;
+}
+
+   
+</style> 
+ 
+</head>
+<body>
+  
+  <div class="modeler-parent">
+    <div id="modeler-container"></div>
+     <div class="loader_container" id="sending-loader">
+          <div class="lds-hourglass"></div>
+      </div>
+    <div class="row" style="margin:0px"> 
+      <div id="properties-container" class="col-md-11"></div>
+      <div id="send-button" class="col-md-1"><button onclick="window.sendFragment()">SEND</button></div>
+    </div>
+  </div>
+
+ <nav class="navbar navbar-expand-lg fixed-top navbar-light bg-light">
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+         File
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="#" onclick="showFragmentsDialog()">Load Fragment</a>
+        </div>
+      </li>
+      <li class="nav-item ">
+        <a class="nav-link" href="#" id="zoominoption" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" onclick="window.zoomin()">
+         +
+        </a>
+      </li>
+      <li class="nav-item ">
+        <a class="nav-link" href="#" id="zoomoutoption" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" onclick="window.zoomout()">
+         -
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>
+  
+
+
+  <div class="modal" tabindex="-1" role="dialog" id="fragments-dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Available fragments</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="list-group">
+            
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="operations-dialog" class="microservices-dialog">
+      <div class="loader_container" id="operations-loader">
+          <div class="lds-hourglass"></div>
+      </div>
+      <h3 class="microservice-name"></h3>
+      <ul class="list-group">
+        
+      </ul>
+  </div>
+
+
+
+  <div class="modal" tabindex="-1" role="dialog" id="message-dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="message-title"></h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+              <p id="message-text"></p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Accept</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+ 
+
+  <script type="text/javascript" src="app.js"></script>
+
+  <script>
+      function showFragmentsDialog(){
+        $("#fragments-dialog").modal();
+      }
+  </script>
+</body>
+</html>

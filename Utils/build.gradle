@@ -1,0 +1,12 @@
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+
+dependencies {
+   	compile group: 'org.dom4j', name: 'dom4j', version: '2.1.0'
+}
+
+jar{
+    baseName = 'es.upv.pros.pvalderas.microservices.composition.bpmn.utils'
+    version =  '0.1.0'
+}
