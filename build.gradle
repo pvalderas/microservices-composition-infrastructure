@@ -1,8 +1,6 @@
-include 'BPMNDomainClasses'
-include 'BPMNUtils'
-include 'CompositionCoordinator'
-include 'FragmentManager'
-include 'GlobalCompositionManager'
+allprojects {
+	version = "1.0"
+}
 
 subprojects {
 	apply plugin: 'java'
