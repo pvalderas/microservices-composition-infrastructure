@@ -1,3 +1,5 @@
-include 'DomainClasses'
-include 'Utils'
-include 'ComposCoordinator'
+include 'BPMNDomainClasses'
+include 'BPMNUtils'
+include 'CompositionCoordinator'
+include 'FragmentManager'
+include 'GlobalCompositionEditor'
