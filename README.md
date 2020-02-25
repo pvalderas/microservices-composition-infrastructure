@@ -127,4 +127,4 @@ eureka:
 ```
 # Using the infrastructure to create and execute a microservice composition
 
-In [microservices-composition-example](https://github.com/pvalderas/microservices-composition-example) you can find the implementation of a case study based on the process of purchase orders. In this example, it is explained how using the BPMN editor of the Global Composition Manager, how execute the composition, and how evolve a composition from both big picture created with the Global Composition Manager and the BPMN fragments available in each microservice.
+In [microservices-composition-example](https://github.com/pvalderas/microservices-composition-example) you can find the implementation of a case study based on the process of purchase orders. In this example, it is explained how using the BPMN editor of the Global Composition Manager, how executing the composition, and how evolving a composition from both big picture created with the Global Composition Manager and the BPMN fragments available in each microservice.
