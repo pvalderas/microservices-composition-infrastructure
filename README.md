@@ -33,6 +33,98 @@ The architectural elements that support our proposal are depicted in red. Thery 
 
 # Creating a Global Composition Manager
 
+To create a Global Composition Manager you can use Gradle to build the corresponding project in this repository and include it as a dependency of a Spring Boot Application. Then, you just need to annotate the main class with the ```@GlobalCompositionManager``` as presented bellow. Note that the ```@SpringBootApplication``` annotation must be configured to find beans in the ```es.upv.pros.pvalderas.globalcompositionmanager``` package.
+
+```java
+@GlobalCompositionManager
+@SpringBootApplication(scanBasePackages = {"es.upv.pros.pvalderas.globalcompositionmanager"})
+public class GlobalCompositionManagerMicroservice {
+	public static void main(String[] args) {
+		SpringApplication.run(GlobalCompositionManagerMicroservice.class, args);
+	}
+}
+```
+Next, you must create an application.yml file, indicating the urls of both the Fragment Manager, and the Service Registry in which microservice are registered. Currently, only Netflix Eureka is supported as Service Registry. Other registries will be supported further.
+
+```yml
+server:
+  port: 8084
+
+composition:
+  fragmentmanager:
+    url: http://localhost:8083/compositions
+  serviceregistry:
+    url: http://localhost:9999/eureka-server
+    type: eureka
+```
+ 
 # Creating a Fragment Manager
 
-# Extending a business microservice with a Compositon Coordinator
+To create a Global Composition Manager you can use Gradle to build the corresponding project in this repository and include it as a dependency of a Spring Boot Application. Then, you just need to annotate the main class with the ```@FragmentManager``` as presented bellow. Note that the ```@SpringBootApplication``` annotation must be configured to find beans in the ```es.upv.pros.pvalderas.fragmentmanager``` package.
+
+```java
+@FragmentManager
+@SpringBootApplication(scanBasePackages = {"es.upv.pros.pvalderas.fragmentmanager"})
+public class FragmentManagerMicroservice {
+	public static void main(String[] args) {
+		SpringApplication.run(FragmentManagerMicroservice.class, args);
+	}
+}
+```
+Next, you must create an application.yml file, indicating the url of the Global Composition Manager.
+
+```yml
+server:
+  port: 8083
+
+composition:
+  globalcompositionmanager:
+    url: http://localhost:8084
+```
+
+# Creating a business microservice extended with a Compositon Coordinator
+
+To create a domain microservice extended with the functionality of a Composition Coordinator you can use Gradle to build the corresponding project in this repository and include it as a dependency of a Spring Boot Application. Then, you just need to annotate the main class with the ```@CompositionCoordinator``` as presented bellow. Note that the ```@SpringBootApplication``` annotation must be configured to find beans in the ```es.upv.pros.pvalderas.compositioncoordinator``` package as well as the package in which the HTTP controller of the microservice is implemented (```es.upv.pros.pvalderas.composition.example.customers``` in the example below). In addition, the ```@CompositionCoordinator``` annotation must be configured with the class object of the microservice HTTP controller.
+
+```java
+@EnableDiscoveryClient
+@CompositionCoordinator(serviceAPIClass=CustomersHTTPController.class)
+@SpringBootApplication(scanBasePackages = {"es.upv.pros.pvalderas.compositioncoordinator","es.upv.pros.pvalderas.composition.example.customers"})
+public class Customers {
+	public static void main(String[] args) {
+		SpringApplication.run(Customers.class, args);
+	}	
+}
+```
+Next, you must create an application.yml file, indicating the following data:
+
+* name of the microservice, which is shown in the BPMN editor
+* Connection data of the message broker. Currently, only RabbitMQ is supported.
+* The url of the Fragment Manager
+* The configuration requested by the Service Resgistry. Currently, only Eureka is supported.
+
+```yml
+spring:
+  application:
+    name: Customers
+    
+server:
+  port: 8081
+  
+composition:
+  messagebroker:
+    type: rabbitmq
+    host: localhost
+    port: 5672
+    exchange: composition
+  fragmentmanager:
+    url: http://localhost:8083
+    
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:2222/eureka
+```
+# Using the infrastructure to create and execute a microservice composition
+
+In [microservices-composition-example](https://github.com/pvalderas/microservices-composition-example) you can find the implementation of a case study based on the process of purchase orders. In this example, it is explained how using the BPMN editor of the Global Composition Manager, how executing the composition, and how evolving a composition from both big picture created with the Global Composition Manager and the BPMN fragments available in each microservice.
