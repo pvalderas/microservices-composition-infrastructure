@@ -23,7 +23,7 @@ This composition approach is supported by a microservice infrastucture developed
 
 The microservice architecture to support the choreographed composition of microservices through BPMN fragments is shown below.
 
-![architecture](./architecture.gif "Proposed Architecture")
+![architecture](./architecture.png "Proposed Architecture")
 
 The architectural elements that support our proposal are the following:
 
