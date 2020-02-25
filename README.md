@@ -82,7 +82,7 @@ composition:
     url: http://localhost:8084
 ```
 
-# Create a business microservice extended with a Compositon Coordinator
+# Creating a business microservice extended with a Compositon Coordinator
 
 To create a domain microservice extended with the functionality of a Composition Coordinator you can use Gradle to build the corresponding project in this repository and include it as a dependency of a Spring Boot Application. Then, you just need to annotate the main class with the ```@CompositionCoordinator``` as presented bellow. Note that the ```@SpringBootApplication``` annotation must be configured to find beans in the ```es.upv.pros.pvalderas.compositioncoordinator``` package as well as the package in which the HTTP controller of the microservice is implemented (```es.upv.pros.pvalderas.composition.example.customers``` in the example below). In addition, the ```@CompositionCoordinator``` annotation must be configured with the class object of the microservice HTTP controller.
 
@@ -125,3 +125,10 @@ eureka:
     serviceUrl:
       defaultZone: http://localhost:2222/eureka
 ```
+# Using the infrastructure to create and execute a microservice composition
+
+In the following Github repository:
+
+ [microservices-composition-example](https://github.com/pvalderas/microservices-composition-example).
+ 
+ you can find the implementation of a case study based on the process of purchase orders. In this example, it is explained how using the BPMN editor of the Global Composition Manager, how execute the composition, and how evolve a composition from both big picture created with the Global Composition Manager and the BPMN fragments available in each microservice.
