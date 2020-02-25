@@ -33,13 +33,12 @@ The architectural elements that support our proposal are depicted in red. Thery 
 
 # Creating a Global Composition Manager
 
-To create a Global Composition Manager you just need to compile the corresponding project and include is as a dependency of a Spring Boot Application. Then, you just need to annotate the main class with the @GlobalCompositionManager as follows:
+To create a Global Composition Manager you can use Gradle to build the corresponding project in this repository and include it as a dependency of a Spring Boot Application. Then, you just need to annotate the main class with the @GlobalCompositionManager as follows:
 
 ```java
 @GlobalCompositionManager
 @SpringBootApplication(scanBasePackages = {"es.upv.pros.pvalderas.globalcompositionmanager"})
 public class GlobalCompositionManagerMicroservice {
-
 	public static void main(String[] args) {
 		SpringApplication.run(GlobalCompositionManagerMicroservice.class, args);
 	}
@@ -60,5 +59,27 @@ composition:
 ```
  
 # Creating a Fragment Manager
+
+To create a Global Composition Manager you can use Gradle to build the corresponding project in this repository and include it as a dependency of a Spring Boot Application. Then, you just need to annotate the main class with the @FragmentManager as follows:
+
+```java
+@FragmentManager
+@SpringBootApplication(scanBasePackages = {"es.upv.pros.pvalderas.fragmentmanager"})
+public class FragmentManagerMicroservice {
+	public static void main(String[] args) {
+		SpringApplication.run(FragmentManagerMicroservice.class, args);
+	}
+}
+```
+Next, you must create an application.yml file, indicating the url of the Global Composition Manager.
+
+```yml
+server:
+  port: 8083
+
+composition:
+  globalcompositionmanager:
+    url: http://localhost:8084
+```
 
 # Extending a business microservice with a Compositon Coordinator
