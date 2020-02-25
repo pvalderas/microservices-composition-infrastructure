@@ -5,10 +5,11 @@ An example using this infrastructure is available in the following Github reposi
 
 It has been implemented by using:
 
-* [Spring Boot](https://spring.io/projects/spring-boot).
+* [Spring Boot](https://spring.io/projects/spring-boot)
 * [Netflix infrastructure](https://github.com/Netflix)
 * [Camunda Engine](https://github.com/camunda/camunda-bpm-spring-boot-starter)
 * [BPMN.io](https://github.com/bpmn-io)
+* [RabbitMQ](https://www.rabbitmq.com/)
 
 # About
 
