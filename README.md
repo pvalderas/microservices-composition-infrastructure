@@ -3,6 +3,13 @@
 This repositry contains a software infrastructure to create a choreographed composition of microservices by using BPMN diagrams. 
 An example using this infrastructure is available in the following Github repository: [microservices-composition-example](https://github.com/pvalderas/microservices-composition-example).
 
+It has been implemented by using:
+
+* [Spring Boot](https://spring.io/projects/spring-boot).
+* [Netflix infrastructure](https://github.com/Netflix)
+* [Camunda Engine](https://github.com/camunda/camunda-bpm-spring-boot-starter)
+* [BPMN.io](https://github.com/bpmn-io)
+
 # About
 
 This is the result of a reserach work leaded by Pedro Valderas at the PROS Research Center, Universitat Politècnica de València, Spain.
