@@ -33,7 +33,7 @@ The architectural elements that support our proposal are depicted in red. Thery 
 
 # Creating a Global Composition Manager
 
-To create a Global Composition Manager you can use Gradle to build the corresponding project in this repository and include it as a dependency of a Spring Boot Application. Then, you just need to annotate the main class with the @GlobalCompositionManager as follows:
+To create a Global Composition Manager you can use Gradle to build the corresponding project in this repository and include it as a dependency of a Spring Boot Application. Then, you just need to annotate the main class with the ```@GlobalCompositionManager``` as presented bellow. Note that the ```@SpringBootApplication``` annotation must be configured to find beans in the ```es.upv.pros.pvalderas.globalcompositionmanager``` package.
 
 ```java
 @GlobalCompositionManager
@@ -60,7 +60,7 @@ composition:
  
 # Creating a Fragment Manager
 
-To create a Global Composition Manager you can use Gradle to build the corresponding project in this repository and include it as a dependency of a Spring Boot Application. Then, you just need to annotate the main class with the @FragmentManager as follows:
+To create a Global Composition Manager you can use Gradle to build the corresponding project in this repository and include it as a dependency of a Spring Boot Application. Then, you just need to annotate the main class with the ```@FragmentManager``` as presented bellow. Note that the ```@SpringBootApplication``` annotation must be configured to find beans in the ```es.upv.pros.pvalderas.fragmentmanager``` package.
 
 ```java
 @FragmentManager
@@ -82,4 +82,46 @@ composition:
     url: http://localhost:8084
 ```
 
-# Extending a business microservice with a Compositon Coordinator
+# Create a business microservice extended with a Compositon Coordinator
+
+To create a domain microservice extended with the functionality of a Composition Coordinator you can use Gradle to build the corresponding project in this repository and include it as a dependency of a Spring Boot Application. Then, you just need to annotate the main class with the ```@CompositionCoordinator``` as presented bellow. Note that the ```@SpringBootApplication``` annotation must be configured to find beans in the ```es.upv.pros.pvalderas.compositioncoordinator``` package as well as the package in which the HTTP controller of the microservice is implemented (```es.upv.pros.pvalderas.composition.example.customers``` in the example below). In addition, the ```@CompositionCoordinator``` annotation must be configured with the class object of the microservice HTTP controller.
+
+```java
+@EnableDiscoveryClient
+@CompositionCoordinator(serviceAPIClass=CustomersHTTPController.class)
+@SpringBootApplication(scanBasePackages = {"es.upv.pros.pvalderas.compositioncoordinator","es.upv.pros.pvalderas.composition.example.customers"})
+public class Customers {
+	public static void main(String[] args) {
+		SpringApplication.run(Customers.class, args);
+	}	
+}
+```
+Next, you must create an application.yml file, indicating the following data:
+
+* name of the microservice, which is shown in the BPMN editor
+* Connection data of the message broker. Currently, only RabbitMQ is supported.
+* The url of the Fragment Manager
+* The configuration requested by the Service Resgistry. Currently, only Eureka is supported.
+
+```yml
+spring:
+  application:
+    name: Customers
+    
+server:
+  port: 8081
+  
+composition:
+  messagebroker:
+    type: rabbitmq
+    host: localhost
+    port: 5672
+    exchange: composition
+  fragmentmanager:
+    url: http://localhost:8083
+    
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:2222/eureka
+```
