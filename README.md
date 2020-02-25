@@ -33,6 +33,32 @@ The architectural elements that support our proposal are depicted in red. Thery 
 
 # Creating a Global Composition Manager
 
+To create a Global Composition Manager you just need to compile the corresponding project and include is as a dependency of a Spring Boot Application. Then, you just need to annotate the main class with the @GlobalCompositionManager as follows:
+
+```java
+@GlobalCompositionManager
+@SpringBootApplication(scanBasePackages = {"es.upv.pros.pvalderas.globalcompositionmanager"})
+public class GlobalCompositionManagerMicroservice {
+
+	public static void main(String[] args) {
+		SpringApplication.run(GlobalCompositionManagerMicroservice.class, args);
+	}
+}
+```
+Next, you must create an application.yml file, indicating the urls of both the Fragment Manager, and the Service Registry in which microservice are registered. Currently, only Netflix Eureka is supported as Service Registry. Other registries will be supported further.
+
+```yml
+server:
+  port: 8084
+
+composition:
+  fragmentmanager:
+    url: http://localhost:8083/compositions
+  serviceregistry:
+    url: http://localhost:9999/eureka-server
+    type: eureka
+```
+ 
 # Creating a Fragment Manager
 
 # Extending a business microservice with a Compositon Coordinator
