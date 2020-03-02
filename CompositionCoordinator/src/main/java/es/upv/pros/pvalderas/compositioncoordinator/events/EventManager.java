@@ -64,7 +64,7 @@ public class EventManager {
 						
 						messageJSON = new JSONObject(message);
 						Clients.currentClient.put(composition.toLowerCase(), messageJSON.getString("client")); 
-						runtimeService.createMessageCorrelation(messageJSON.getString(message)).correlate();
+						runtimeService.createMessageCorrelation(messageJSON.getString("message")).correlate();
 					
 						System.out.println("Received Message: "+ message);
 					} catch (JSONException e) {

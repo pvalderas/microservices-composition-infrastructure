@@ -7,7 +7,8 @@ import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.camunda.bpm.engine.impl.el.FixedValue;
 import org.springframework.stereotype.Component;
-
+import org.json.JSONException;
+import org.json.JSONObject;
 import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -36,8 +37,16 @@ public class EventSender implements JavaDelegate {
 				String composition=message.getExpressionText().substring(0,message.getExpressionText().indexOf("_"));
 				String client=Clients.currentClient.get(composition.toLowerCase()); 
 				String topic=microservice.getExpressionText().toLowerCase()+"."+composition.toLowerCase()+"."+client;
-				channel.basicPublish(EventManager.getRABBITMQ_EXCHANGE(), topic, null, message.getExpressionText().getBytes());
 				
+				try {
+					JSONObject messageJSON = new JSONObject();
+					messageJSON.put("message",message.getExpressionText());
+					messageJSON.put("client",client);
+					channel.basicPublish(EventManager.getRABBITMQ_EXCHANGE(), topic, null, messageJSON.toString().getBytes());
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+
 				channel.close();
 				connection.close();
 				

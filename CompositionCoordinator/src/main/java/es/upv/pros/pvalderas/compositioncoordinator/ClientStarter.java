@@ -68,9 +68,9 @@ public class ClientStarter implements ApplicationRunner {
 			String microserviceURL=this.sendURLtoFragmentManager(props, microServiceName);       
 			this.registerOperations(mainClass,microserviceURL);
 			
-			loadAllFragments();
+			String[] compositions=loadAllFragments();
 			
-			eventManager.registerEventListener(microServiceName);
+			for(String composition:compositions) eventManager.registerEventListener(microServiceName, composition);
 				      
 			System.out.println("OK");
 		}
@@ -142,7 +142,7 @@ public class ClientStarter implements ApplicationRunner {
          }
     }
     
-    private void loadAllFragments(){
+    private String[] loadAllFragments(){
 		File dir=new File("fragments");
     	String compositions[]=dir.list();
 
@@ -160,6 +160,8 @@ public class ClientStarter implements ApplicationRunner {
 	        	}
     		}
     	}
+    	
+    	return compositions;
     }
     
     
