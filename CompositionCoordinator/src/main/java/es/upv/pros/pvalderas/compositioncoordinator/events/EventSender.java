@@ -29,12 +29,14 @@ public class EventSender implements JavaDelegate {
 				Connection connection;
 			
 				connection = factory.newConnection();
-				
 				Channel channel = connection.createChannel();
-				
 				channel.exchangeDeclare(EventManager.getRABBITMQ_EXCHANGE(), BuiltinExchangeType.TOPIC);
 				
-				channel.basicPublish(EventManager.getRABBITMQ_EXCHANGE(), microservice.getExpressionText().toLowerCase(), null, message.getExpressionText().getBytes());
+				 
+				String composition=message.getExpressionText().substring(0,message.getExpressionText().indexOf("_"));
+				String client=Clients.currentClient.get(composition.toLowerCase()); 
+				String topic=microservice.getExpressionText().toLowerCase()+"."+composition.toLowerCase()+"."+client;
+				channel.basicPublish(EventManager.getRABBITMQ_EXCHANGE(), topic, null, message.getExpressionText().getBytes());
 				
 				channel.close();
 				connection.close();

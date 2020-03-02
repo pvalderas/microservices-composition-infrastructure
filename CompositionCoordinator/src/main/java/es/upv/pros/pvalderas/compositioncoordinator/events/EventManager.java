@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 import org.camunda.bpm.engine.RuntimeService;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -27,15 +29,15 @@ public class EventManager {
 	@Autowired
 	private RuntimeService runtimeService;
 
-	public void registerEventListener(String microservice) throws IOException, TimeoutException{
+	public void registerEventListener(String microservice, String composition) throws IOException, TimeoutException{
 		
 		switch(brokerType){
-			case "rabbitmq": rabbitmqRegisterEvent(microservice); break;
+			case "rabbitmq": rabbitmqRegisterEvent(microservice, composition); break;
 		}
 	
 	}
 	
-	private void rabbitmqRegisterEvent(String microservice) throws IOException, TimeoutException{
+	private void rabbitmqRegisterEvent(String microservice, String composition) throws IOException, TimeoutException{
 		
 		String exchange=getRABBITMQ_EXCHANGE();
 		
@@ -48,7 +50,7 @@ public class EventManager {
 		channel.exchangeDeclare(exchange, BuiltinExchangeType.TOPIC);
 		 
 		String COLA_CONSUMER = channel.queueDeclare().getQueue();
-		channel.queueBind(COLA_CONSUMER, exchange, microservice.toLowerCase());
+		channel.queueBind(COLA_CONSUMER, exchange, microservice.toLowerCase()+"."+composition.toLowerCase()+".*");
 
 		Consumer consumer = new DefaultConsumer(channel) {
 			 @Override
@@ -56,11 +58,18 @@ public class EventManager {
 					 					AMQP.BasicProperties properties, byte[] body) throws IOException {
 				 
 				
-					 String message=new String(body);
+					String message=new String(body);
+					JSONObject messageJSON;
+					try {
+						
+						messageJSON = new JSONObject(message);
+						Clients.currentClient.put(composition.toLowerCase(), messageJSON.getString("client")); 
+						runtimeService.createMessageCorrelation(messageJSON.getString(message)).correlate();
 					
-					 runtimeService.createMessageCorrelation(message).correlate();
-					
-					 System.out.println("Received Message: "+ message);
+						System.out.println("Received Message: "+ message);
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
 				
 			 }
 		 };
