@@ -43,7 +43,7 @@ dependencies {
 	compile 'org.springframework:spring-jdbc'
    	runtime 'com.h2database:h2:1.4.197'
    	compile 'com.rabbitmq:amqp-client:5.2.0'
- 	compile 'com.github.pvalderas:microservice-composition-basicsupport:master-SNAPSHOT'
+ 	implementation 'com.github.pvalderas.microservices-composition-infrastructure:BPMNUtils:master-SNAPSHOT'
 }
 
 jar{
