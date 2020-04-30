@@ -45,6 +45,7 @@ dependencies {
    	compile 'com.rabbitmq:amqp-client:5.2.0'
  	compile project(':BPMNUtils')
     compile project(':BPMNDomainClasses')
+}
 
 jar{
     baseName = 'CompositionCoordinator'
