@@ -3,6 +3,6 @@ targetCompatibility = 1.8
 
 
 jar{
-    baseName = 'microservices.composition.bpmn.domain'
+    baseName = 'BPMNDomainClasses'
     version =  '0.1.0'
 }

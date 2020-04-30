@@ -47,6 +47,6 @@ dependencies {
 }
 
 jar{
-    baseName = 'es.pros.upv.pvalderas.compositionCoordinator'
+    baseName = 'CompositionCoordinator'
     version =  '0.1.0'
 }
