@@ -21,6 +21,6 @@ dependencies {
 }
 
 jar{
-    baseName = 'bpmn.utils'
+    baseName = 'BPMNUtils'
     version =  '0.1.0'
 }
