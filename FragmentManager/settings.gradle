@@ -15,4 +15,10 @@ include 'api'
 include 'services:webservice'
 */
 
+include   'BPMNUtils'
+project(':BPMNUtils').projectDir = new File(settingsDir, '../BPMNUtils')
+
+include   'BPMNDomainClasses'
+project(':BPMNDomainClasses').projectDir = new File(settingsDir, '../BPMNDomainClasses')
+
 rootProject.name = 'FragmentManager'
