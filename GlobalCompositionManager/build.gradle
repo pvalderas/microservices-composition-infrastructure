@@ -32,6 +32,6 @@ dependencies {
 }
 
 jar{
-    baseName = 'es.upv.pros.pvalderas.globalcompositionmanager'
+    baseName = 'GlobalCompositionManager'
     version =  '0.1.0'
 }
