@@ -111,8 +111,8 @@ public class BPMNFragmentBuilder {
 		
 		List<Node> tasks=query.selectNodes("bpmn:serviceTask",process);
 		for(Node task:tasks){
-			System.out.println("-------------->"+task.valueOf("camunda:delegateExpression").length());
-			if(task.valueOf("camunda:delegateExpression")==null)
+			System.out.println("--------------------->"+task.valueOf("@camunda:delegateExpression"));
+			if(task.valueOf("@camunda:delegateExpression").length()==0)
 				((Element)task).addAttribute("camunda:delegateExpression","${serviceClass}");
 		}
 		
@@ -199,7 +199,7 @@ public class BPMNFragmentBuilder {
 				
 				this.messages.add(getMessageId(endEventName));
 				
-				if(((Element)messageDef).valueOf("camunda:delegateExpression")==null){
+				if(((Element)messageDef).valueOf("@camunda:delegateExpression").length()==0){
 					((Element)messageDef).addAttribute("camunda:delegateExpression","${eventSender}");
 				}
 				Element extensions = ((Element)messageDef).addElement(new QName("extensionElements", nsm.getNameSpace("bpmn")));
