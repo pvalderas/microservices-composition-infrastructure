@@ -18,6 +18,8 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -39,6 +41,8 @@ public class ServerHTTPController {
 	 @Autowired
 	 JdbcTemplate jdbcTemplate;
 	 
+	 @Autowired
+	   private ResourcePatternResolver resourceLoader;
 	
 	 @RequestMapping(
 			  value = "/compositions", 
@@ -83,6 +87,19 @@ public class ServerHTTPController {
 	 @Transactional
 	 public List<Map<String, Object>> getProcessess() {
 		 return jdbcTemplate.queryForList("SELECT * FROM compositions");
+	 }
+	 
+	 @RequestMapping(
+			  value = "/compositionbpmn/{composition}", 
+			  method = RequestMethod.GET,
+			  produces = "application/json")
+	 @Transactional
+	 public String getFragmentBPMN(@PathVariable(value="composition") String composition) throws IOException {
+		 final Resource[] resources = this.resourceLoader.getResources("file:" + System.getProperty("user.dir") + "/compositions/"+composition+"/*.bpmn");
+		 if(resources.length==1){
+			 return new String(Files.readAllBytes(Paths.get(resources[0].getURI())));
+		 }
+		 else return "";
 	 }
 	 
 
