@@ -113,6 +113,8 @@ const $propertiesContainer = document.querySelector('#properties-container');
 
 var jQuery = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js");
 
+var url = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''); //var url = "http://localhost:8084";
+
 const modeler = new bpmn_js_lib_Modeler__WEBPACK_IMPORTED_MODULE_0__["default"]({
   container: $modelerContainer,
   moddleExtensions: {
@@ -217,8 +219,6 @@ window.checkBPMN = () => {
 };
 
 window.sendBPMN = id => {
-  var managerUrl = localStorage.getItem("managerUrl");
-  var url = managerUrl + (managerUrl.charAt(managerUrl.length - 1) == "/" ? "" : "/") + "compositions";
   var canvas = modeler.get('canvas'),
       modeling = modeler.get('modeling');
   const definitions = modeler.get('canvas').getRootElement().businessObject.$parent;
@@ -233,7 +233,7 @@ window.sendBPMN = id => {
     }
 
     jQuery.ajax({
-      url: url,
+      url: url + "/compositions",
       method: "POST",
       data: JSON.stringify({
         "id": id,
@@ -284,6 +284,25 @@ window.zoomout = () => {
   modeler.get('canvas').zoom(modeler.get('canvas').zoom() - 0.1);
 };
 
+window.loadComposition = composition => {
+  jQuery.ajax({
+    url: url + "/compositionbpmn/" + composition,
+    method: "GET",
+    dataType: "text",
+    success: function (compo) {
+      console.log(compo);
+      modeler.importXML(compo); //modeler.on('element.click', removeHandler);
+      //sessionStorage.setItem("composition",composition);
+
+      $("#compositions-dialog").modal('hide');
+    },
+    error: function (jx, status, error) {
+      console.log(error);
+      showMessage("Error", error);
+    }
+  });
+};
+
 /***/ }),
 
 /***/ "./app/diagram.bpmn":
@@ -305,6 +324,8 @@ module.exports = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<bpmn:definitions 
 /***/ (function(module, exports, __webpack_require__) {
 
 var jQuery = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js");
+
+var url = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''); //var url = "http://localhost:8084";
 
 $(document).ready(function () {
   /*if(localStorage.getItem("serviceServerUrl")==null || localStorage.getItem("managerUrl")==null ||
@@ -333,7 +354,6 @@ function saveConfig() {
 }
 
 function loadConnectionData() {
-  var url = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '');
   jQuery.ajax({
     url: url + "/serviceregistry",
     dataType: "json",
@@ -342,6 +362,22 @@ function loadConnectionData() {
       localStorage.setItem("serviceServerType", serviceRegistry.type);
       localStorage.setItem("managerUrl", url);
       loadMicroservices();
+      loadCompositions();
+    }
+  });
+}
+
+function loadCompositions() {
+  jQuery.ajax({
+    url: url + "/compositions",
+    dataType: "json",
+    success: function (compositions) {
+      if (compositions.length > 0) {
+        jQuery.each(compositions, function (index, composition) {
+          jQuery("#compositions-dialog .list-group").append('<a href="#" class="list-group-item list-group-item-action" onclick="window.loadComposition(\'' + composition.ID + '\')">' + composition.ID + '</a>');
+        });
+        $("#compositions-dialog").modal();
+      }
     }
   });
 }
@@ -350,9 +386,9 @@ function loadMicroservices() {
   var serviceServerUrl = localStorage.getItem("serviceServerUrl");
 
   if (localStorage.getItem("serviceServerType") == "eureka") {
-    var url = serviceServerUrl + (serviceServerUrl.charAt(serviceServerUrl.length - 1) == "/" ? "" : "/") + "eureka/apps";
+    var microUrl = serviceServerUrl + (serviceServerUrl.charAt(serviceServerUrl.length - 1) == "/" ? "" : "/") + "eureka/apps";
     jQuery.ajax({
-      url: url,
+      url: microUrl,
       headers: {
         "Accept": "application/json"
       },
