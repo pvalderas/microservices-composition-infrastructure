@@ -13,7 +13,7 @@ It has been implemented by using:
 
 # About
 
-This is the result of a reserach work leaded by Pedro Valderas at the PROS Research Center, Universitat Politècnica de València, Spain.
+This is the result of a research work leaded by Pedro Valderas at the PROS Research Center, Universitat Politècnica de València, Spain.
 
 This work presents a microservice composition approach based on the choreography of BPMN fragments. On the one hand, developers can describe the big picture of the composition with a BPMN model, providing a valuable mechanism to analyse it when engineering decisions need to be taken. On the other hand, this model is split into fragments in order to be executed though an event-based choreography form, providing the high degree of decoupling among microservices demanded in this type of architecture. 
 
