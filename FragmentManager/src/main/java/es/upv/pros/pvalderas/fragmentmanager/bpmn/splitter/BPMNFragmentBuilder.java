@@ -111,6 +111,7 @@ public class BPMNFragmentBuilder {
 		
 		List<Node> tasks=query.selectNodes("bpmn:serviceTask",process);
 		for(Node task:tasks){
+			System.out.println("-------------->"+task.valueOf("camunda:delegateExpression"));
 			if(task.valueOf("camunda:delegateExpression")==null)
 				((Element)task).addAttribute("camunda:delegateExpression","${serviceClass}");
 		}
