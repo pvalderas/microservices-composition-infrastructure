@@ -201,15 +201,16 @@ public class BPMNFragmentBuilder {
 				
 				if(((Element)messageDef).valueOf("@camunda:delegateExpression").length()==0){
 					((Element)messageDef).addAttribute("camunda:delegateExpression","${eventSender}");
-				}
-				Element extensions = ((Element)messageDef).addElement(new QName("extensionElements", nsm.getNameSpace("bpmn")));
-				Element field=extensions.addElement(new QName("field", nsm.getNameSpace("camunda")));
-				field.addAttribute("name", "message");
-				field.addAttribute("stringValue", this.compositionName+"_"+getMessageId(endEventName)+"Message");
 				
-				Element field2=extensions.addElement(new QName("field", nsm.getNameSpace("camunda")));
-				field2.addAttribute("name", "microservice");
-				field2.addAttribute("stringValue", targetMicroService);
+					Element extensions = ((Element)messageDef).addElement(new QName("extensionElements", nsm.getNameSpace("bpmn")));
+					Element field=extensions.addElement(new QName("field", nsm.getNameSpace("camunda")));
+					field.addAttribute("name", "message");
+					field.addAttribute("stringValue", this.compositionName+"_"+getMessageId(endEventName)+"Message");
+					
+					Element field2=extensions.addElement(new QName("field", nsm.getNameSpace("camunda")));
+					field2.addAttribute("name", "microservice");
+					field2.addAttribute("stringValue", targetMicroService);
+				}
 			}
 		}
 		
