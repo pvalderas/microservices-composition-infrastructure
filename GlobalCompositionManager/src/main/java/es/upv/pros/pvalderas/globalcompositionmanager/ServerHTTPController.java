@@ -95,7 +95,7 @@ public class ServerHTTPController {
 			  produces = "application/json")
 	 @Transactional
 	 public String getFragmentBPMN(@PathVariable(value="composition") String composition) throws IOException {
-		 final Resource[] resources = this.resourceLoader.getResources("file:" + System.getProperty("user.dir") + "/compositions/"+composition+"/.bpmn");
+		 final Resource[] resources = this.resourceLoader.getResources("file:" + System.getProperty("user.dir") + "/compositions/"+composition+".bpmn");
 		 if(resources.length==1){
 			 return new String(Files.readAllBytes(Paths.get(resources[0].getURI())));
 		 }
