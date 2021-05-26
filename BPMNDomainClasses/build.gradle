@@ -1,6 +1,5 @@
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
+apply plugin: 'eclipse'
+apply plugin: 'java'
 
 jar{
     baseName = 'BPMNDomainClasses'

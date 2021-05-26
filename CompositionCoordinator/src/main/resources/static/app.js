@@ -96,13 +96,15 @@
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var bpmn_js_lib_Modeler__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! bpmn-js/lib/Modeler */ "./node_modules/bpmn-js/lib/Modeler.js");
-/* harmony import */ var _properties_panel__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./properties-panel */ "./app/properties-panel/index.js");
-/* harmony import */ var _moddle_custom_json__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./moddle/custom.json */ "./app/moddle/custom.json");
-var _moddle_custom_json__WEBPACK_IMPORTED_MODULE_2___namespace = /*#__PURE__*/__webpack_require__.t(/*! ./moddle/custom.json */ "./app/moddle/custom.json", 1);
-/* harmony import */ var _diagram_bpmn__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./diagram.bpmn */ "./app/diagram.bpmn");
-/* harmony import */ var _diagram_bpmn__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_diagram_bpmn__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var diagram_js_lib_command_CommandInterceptor__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! diagram-js/lib/command/CommandInterceptor */ "./node_modules/diagram-js/lib/command/CommandInterceptor.js");
+/* harmony import */ var _properties_panel__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./properties-panel */ "./app/properties-panel/index.js");
+/* harmony import */ var _moddle_custom_json__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./moddle/custom.json */ "./app/moddle/custom.json");
+var _moddle_custom_json__WEBPACK_IMPORTED_MODULE_3___namespace = /*#__PURE__*/__webpack_require__.t(/*! ./moddle/custom.json */ "./app/moddle/custom.json", 1);
 /* harmony import */ var _js_composition_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./js/composition.js */ "./app/js/composition.js");
 /* harmony import */ var _js_composition_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_js_composition_js__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var diagram_js_lib_features_rules_RuleProvider__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! diagram-js/lib/features/rules/RuleProvider */ "./node_modules/diagram-js/lib/features/rules/RuleProvider.js");
+/* harmony import */ var inherits__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! inherits */ "./node_modules/inherits/inherits_browser.js");
+/* harmony import */ var inherits__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(inherits__WEBPACK_IMPORTED_MODULE_6__);
 
 
 var camundaExtensionModule = __webpack_require__(/*! camunda-bpmn-moddle/lib */ "./node_modules/camunda-bpmn-moddle/lib/index.js");
@@ -120,18 +122,51 @@ var jQuery = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquer
 
 var url = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''); //var url="http://localhost:8081";
 
+
+
+
+function CustomRules(eventBus) {
+  diagram_js_lib_features_rules_RuleProvider__WEBPACK_IMPORTED_MODULE_5__["default"].call(this, eventBus);
+  this.addRule("elements.delete", function (context) {
+    // don't allow deleting script tasks
+    return context.elements.filter(function (e) {
+      return !e.businessObject.name == "EVENT BUS";
+    });
+  });
+}
+
+inherits__WEBPACK_IMPORTED_MODULE_6___default()(CustomRules, diagram_js_lib_features_rules_RuleProvider__WEBPACK_IMPORTED_MODULE_5__["default"]);
+CustomRules.$inject = ["eventBus"];
+
+class MyPostShapeDeleteBehaviour extends diagram_js_lib_command_CommandInterceptor__WEBPACK_IMPORTED_MODULE_1__["default"] {
+  constructor(eventBus, modeling) {
+    super(eventBus);
+    this.postExecute("shape.delete", (context, command, event) => {
+      console.log("foo");
+    }, true);
+  }
+
+}
+
+MyPostShapeDeleteBehaviour.$inject = ["eventBus", "modeling"];
 const modeler = new bpmn_js_lib_Modeler__WEBPACK_IMPORTED_MODULE_0__["default"]({
   container: $modelerContainer,
   moddleExtensions: {
-    custom: _moddle_custom_json__WEBPACK_IMPORTED_MODULE_2__,
+    custom: _moddle_custom_json__WEBPACK_IMPORTED_MODULE_3__,
     camunda: camundaModdle
   },
-  additionalModules: [camundaExtensionModule],
+  additionalModules: [{
+    __init__: ["myPostShapeDeleteBehaviour"],
+    myPostShapeDeleteBehaviour: ["type", MyPostShapeDeleteBehaviour]
+  }, {
+    __init__: [],
+    customRules: ["type", CustomRules]
+  }, camundaExtensionModule],
   keyboard: {
     bindTo: document.body
   }
 });
-const propertiesPanel = new _properties_panel__WEBPACK_IMPORTED_MODULE_1__["default"]({
+const propertiesPanel = new _properties_panel__WEBPACK_IMPORTED_MODULE_2__["default"]({
   container: $propertiesContainer,
   modeler
 });
@@ -207,6 +242,7 @@ window.sendFragment = () => {
         data: JSON.stringify({
           "id": id,
           "composition": sessionStorage.getItem("composition"),
+          "microservice": sessionStorage.getItem("microservicename"),
           "xml": xml
         }),
         headers: {
@@ -282,17 +318,6 @@ window.zoomin = () => {
 window.zoomout = () => {
   modeler.get('canvas').zoom(modeler.get('canvas').zoom() - 0.1);
 };
-
-/***/ }),
-
-/***/ "./app/diagram.bpmn":
-/*!**************************!*\
-  !*** ./app/diagram.bpmn ***!
-  \**************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-module.exports = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<bpmn:definitions xmlns:bpmn=\"http://www.omg.org/spec/BPMN/20100524/MODEL\" xmlns:bpmndi=\"http://www.omg.org/spec/BPMN/20100524/DI\" xmlns:di=\"http://www.omg.org/spec/DD/20100524/DI\" xmlns:dc=\"http://www.omg.org/spec/DD/20100524/DC\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:custom=\"http://custom/ns\" id=\"Definitions_1\" targetNamespace=\"http://bpmn.io/schema/bpmn\">\n  <bpmn:process id=\"Process_1\" isExecutable=\"false\">\n    <bpmn:startEvent id=\"StartEvent_1\">\n      <bpmn:outgoing>SequenceFlow_0b6cm13</bpmn:outgoing>\n    </bpmn:startEvent>\n    <bpmn:sequenceFlow id=\"SequenceFlow_0b6cm13\" sourceRef=\"StartEvent_1\" targetRef=\"Task_0zlv465\" />\n    <bpmn:endEvent id=\"EndEvent_09arx8f\">\n      <bpmn:incoming>SequenceFlow_035kn8o</bpmn:incoming>\n    </bpmn:endEvent>\n    <bpmn:sequenceFlow id=\"SequenceFlow_17w8608\" sourceRef=\"Task_0zlv465\" targetRef=\"Task_1xewseo\" />\n    <bpmn:task id=\"Task_1xewseo\" name=\"Do more work\">\n      <bpmn:incoming>SequenceFlow_17w8608</bpmn:incoming>\n      <bpmn:outgoing>SequenceFlow_035kn8o</bpmn:outgoing>\n    </bpmn:task>\n    <bpmn:sequenceFlow id=\"SequenceFlow_035kn8o\" sourceRef=\"Task_1xewseo\" targetRef=\"EndEvent_09arx8f\" />\n    <bpmn:serviceTask id=\"Task_0zlv465\" name=\"Do work\" custom:topic=\"my.custom.topic\">\n      <bpmn:incoming>SequenceFlow_0b6cm13</bpmn:incoming>\n      <bpmn:outgoing>SequenceFlow_17w8608</bpmn:outgoing>\n    </bpmn:serviceTask>\n  </bpmn:process>\n  <bpmndi:BPMNDiagram id=\"BPMNDiagram_1\">\n    <bpmndi:BPMNPlane id=\"BPMNPlane_1\" bpmnElement=\"Process_1\">\n      <bpmndi:BPMNShape id=\"_BPMNShape_StartEvent_2\" bpmnElement=\"StartEvent_1\">\n        <dc:Bounds x=\"173\" y=\"188\" width=\"36\" height=\"36\" />\n        <bpmndi:BPMNLabel>\n          <dc:Bounds x=\"146\" y=\"224\" width=\"90\" height=\"20\" />\n        </bpmndi:BPMNLabel>\n      </bpmndi:BPMNShape>\n      <bpmndi:BPMNEdge id=\"SequenceFlow_0b6cm13_di\" bpmnElement=\"SequenceFlow_0b6cm13\">\n        <di:waypoint x=\"209\" y=\"206\" />\n        <di:waypoint x=\"256\" y=\"206\" />\n        <bpmndi:BPMNLabel>\n          <dc:Bounds x=\"192.5\" y=\"110\" width=\"90\" height=\"20\" />\n        </bpmndi:BPMNLabel>\n      </bpmndi:BPMNEdge>\n      <bpmndi:BPMNShape id=\"EndEvent_09arx8f_di\" bpmnElement=\"EndEvent_09arx8f\">\n        <dc:Bounds x=\"552\" y=\"188\" width=\"36\" height=\"36\" />\n        <bpmndi:BPMNLabel>\n          <dc:Bounds x=\"404\" y=\"138\" width=\"90\" height=\"20\" />\n        </bpmndi:BPMNLabel>\n      </bpmndi:BPMNShape>\n      <bpmndi:BPMNEdge id=\"SequenceFlow_17w8608_di\" bpmnElement=\"SequenceFlow_17w8608\">\n        <di:waypoint x=\"356\" y=\"206\" />\n        <di:waypoint x=\"399\" y=\"206\" />\n        <bpmndi:BPMNLabel>\n          <dc:Bounds x=\"353.5\" y=\"110\" width=\"90\" height=\"20\" />\n        </bpmndi:BPMNLabel>\n      </bpmndi:BPMNEdge>\n      <bpmndi:BPMNShape id=\"Task_1xewseo_di\" bpmnElement=\"Task_1xewseo\">\n        <dc:Bounds x=\"399\" y=\"166\" width=\"100\" height=\"80\" />\n      </bpmndi:BPMNShape>\n      <bpmndi:BPMNEdge id=\"SequenceFlow_035kn8o_di\" bpmnElement=\"SequenceFlow_035kn8o\">\n        <di:waypoint x=\"499\" y=\"206\" />\n        <di:waypoint x=\"552\" y=\"206\" />\n      </bpmndi:BPMNEdge>\n      <bpmndi:BPMNShape id=\"ServiceTask_0wob562_di\" bpmnElement=\"Task_0zlv465\">\n        <dc:Bounds x=\"256\" y=\"166\" width=\"100\" height=\"80\" />\n      </bpmndi:BPMNShape>\n    </bpmndi:BPMNPlane>\n  </bpmndi:BPMNDiagram>\n</bpmn:definitions>\n"
 
 /***/ }),
 
