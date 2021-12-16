@@ -23,6 +23,9 @@ public class EventManager {
 	
 	private static String host;
 	private static String port;
+	private static String virtualHost;
+	private static String user;
+	private static String password;
 	
 	private static String brokerType;
 	
@@ -44,6 +47,9 @@ public class EventManager {
 		ConnectionFactory factory = new ConnectionFactory();
 		factory.setHost(host);
 		factory.setPort(Integer.parseInt(port));
+		if(virtualHost!=null) factory.setVirtualHost(virtualHost);
+		if(user!=null) factory.setUsername(user);
+		if(password!=null) factory.setPassword(password);
 		Connection connection = factory.newConnection();
 		Channel channel = connection.createChannel();
 
@@ -91,6 +97,14 @@ public class EventManager {
 	public static void setHost(String host) {
 		EventManager.host = host;
 	}
+	
+	public static String getVirtualHost() {
+		return virtualHost;
+	}
+
+	public static void setVirtualHost(String virtualHost) {
+		EventManager.virtualHost = virtualHost;
+	}
 
 	public static String getPort() {
 		return port;
@@ -98,6 +112,22 @@ public class EventManager {
 
 	public static void setPort(String port) {
 		EventManager.port = port;
+	}
+	
+	public static String getUser() {
+		return user;
+	}
+
+	public static void setUser(String user) {
+		EventManager.user = user;
+	}
+	
+	public static String getPassword() {
+		return password;
+	}
+
+	public static void setPassword(String password) {
+		EventManager.password = password;
 	}
 
 	public static String getBrokerType() {
