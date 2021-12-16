@@ -97,7 +97,7 @@ public class ClientStarter implements ApplicationRunner {
         EventManager.setVirtualHost(props.getProperty("composition.messagebroker.virtualHost"));
         EventManager.setPort(props.getProperty("composition.messagebroker.port"));
         EventManager.setUser(props.getProperty("composition.messagebroker.user"));
-        EventManager.setPassword(props.getProperty("composition.messagebroker.password"));
+        EventManager.setPassword(props.getProperty("composition.messagebroker.password")); 
         
         if(EventManager.getBrokerType().equals(EventManager.RABBITMQ) && props.getProperty("composition.messagebroker.exchange")!=null)
        	 EventManager.setRABBITMQ_EXCHANGE(props.getProperty("composition.messagebroker.exchange"));

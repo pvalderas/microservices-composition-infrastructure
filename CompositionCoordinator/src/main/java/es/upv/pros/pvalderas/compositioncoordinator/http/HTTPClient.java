@@ -26,7 +26,7 @@ public class HTTPClient {
 		in.close();
 		con.disconnect();
 		return response.toString();
-	}
+	} 
 	
 	public static String post(String url, String data, boolean responseProcess, String dataType) throws IOException{
 		URL obj = new URL(url);
