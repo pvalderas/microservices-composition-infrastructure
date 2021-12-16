@@ -28,7 +28,7 @@ configurations.all {
 
 dependencies {
     compile 'org.springframework.boot:spring-boot-starter-web'
-	  compile 'org.springframework:spring-jdbc'
+	compile 'org.springframework:spring-jdbc'
    	compile 'com.rabbitmq:amqp-client:5.2.0'
    	compile 'org.json:json:20090211'
    	compile group: 'org.dom4j', name: 'dom4j', version: '2.1.0'
