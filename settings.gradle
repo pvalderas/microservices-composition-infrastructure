@@ -1,5 +1,5 @@
 include 'BPMNDomainClasses'
-include 'BPMNUtils'
+include 'CompositionUtils'
 include 'CompositionCoordinator'
 include 'FragmentManager'
 include 'GlobalCompositionManager'
