@@ -7,6 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Properties;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ import org.springframework.web.client.RestTemplate;
 
 import es.upv.pros.pvalderas.composition.bpmn.domain.BPMNFragment;
 import es.upv.pros.pvalderas.composition.bpmn.domain.MicroService;
+import es.upv.pros.pvalderas.composition.eventbroker.utils.BrokerConfig;
 import es.upv.pros.pvalderas.compositioncoordinator.dao.DAO;
 import es.upv.pros.pvalderas.compositioncoordinator.events.EventManager;
 
@@ -55,14 +57,18 @@ public class ClientStarter implements ApplicationRunner {
 		if(mainClass!=null){
 			System.out.print("Setting up Composition Coordinator......");
 			 
-			String microServiceName=mainClass.getName().substring(mainClass.getName().lastIndexOf(".")+1);
+			//String microServiceName=mainClass.getName().substring(mainClass.getName().lastIndexOf(".")+1);
 			Properties props=this.loadProperties();
+			String microServiceName=props.getProperty("spring.application.name");
+			if(microServiceName==null) microServiceName=mainClass.getName().substring(mainClass.getName().lastIndexOf(".")+1);
 				        
 			this.createFragmentsFolder();
-			dao.createFragmentsTable();      
+			dao.getFragments().createFragmentsTable();      
 			
-			dao.createMicroserviceTable();
-	    	dao.saveMicroserviceName(microServiceName);
+			dao.getMicroservices().createMicroserviceTable();
+			dao.getMicroservices().saveMicroserviceName(microServiceName);
+			dao.getLocalChanges().createLocalChangesTable();
+			dao.getParticipantChanges().createTable();
 			
 			this.configMessageBroker(props);
 			String microserviceURL=this.sendURLtoFragmentManager(props, microServiceName);       
@@ -70,7 +76,9 @@ public class ClientStarter implements ApplicationRunner {
 			
 			String[] compositions=loadAllFragments();
 			
-			for(String composition:compositions) eventManager.registerEventListener(microServiceName, composition);
+			for(String composition:compositions){
+				eventManager.registerEventListener(microServiceName, composition);
+			}
 				      
 			System.out.println("OK");
 		}
@@ -92,15 +100,13 @@ public class ClientStarter implements ApplicationRunner {
     
     private void configMessageBroker(Properties props){
         
-        EventManager.setBrokerType(props.getProperty("composition.messagebroker.type"));
-        EventManager.setHost(props.getProperty("composition.messagebroker.host"));
-        EventManager.setVirtualHost(props.getProperty("composition.messagebroker.virtualHost"));
-        EventManager.setPort(props.getProperty("composition.messagebroker.port"));
-        EventManager.setUser(props.getProperty("composition.messagebroker.user"));
-        EventManager.setPassword(props.getProperty("composition.messagebroker.password")); 
+        BrokerConfig.setBrokerType(props.getProperty("composition.messagebroker.type"));
+        BrokerConfig.setHost(props.getProperty("composition.messagebroker.host"));
+        BrokerConfig.setVirtualHost(props.getProperty("composition.messagebroker.virtualHost"));
+        BrokerConfig.setPort(props.getProperty("composition.messagebroker.port"));
+        BrokerConfig.setUser(props.getProperty("composition.messagebroker.user"));
+        BrokerConfig.setPassword(props.getProperty("composition.messagebroker.password")); 
         
-        if(EventManager.getBrokerType().equals(EventManager.RABBITMQ) && props.getProperty("composition.messagebroker.exchange")!=null)
-       	 EventManager.setRABBITMQ_EXCHANGE(props.getProperty("composition.messagebroker.exchange"));
     }
     
     private String sendURLtoFragmentManager(Properties props, String microServiceName) throws UnknownHostException{
@@ -109,7 +115,7 @@ public class ClientStarter implements ApplicationRunner {
     	
         String microservicePORT = props.getProperty("server.port")!=null?props.getProperty("server.port"):"8080";
         String microserviceIP = props.getProperty("server.ip")!=null?props.getProperty("server.ip"):InetAddress.getLocalHost().getHostAddress();
-       
+        
         String protocol="";
         if(props.getProperty("server.ssl.enabled")!=null && props.getProperty("server.ssl.enabled")=="true")
         	protocol="https://";
@@ -128,7 +134,7 @@ public class ClientStarter implements ApplicationRunner {
     }
     
     private void registerOperations(Class mainClass, String microserviceURL) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException{
-    	 dao.createOperationTable();
+    	 dao.getMicroservices().createOperationTable();
          
          Annotation annotation = mainClass.getDeclaredAnnotation(CompositionCoordinator.class);
          Class classAPI=(Class)annotation.annotationType().getMethod("serviceAPIClass").invoke(annotation);
@@ -139,7 +145,7 @@ public class ClientStarter implements ApplicationRunner {
         		String[] path=(String[])request.annotationType().getMethod("value").invoke(request);
         		RequestMethod[] methods=(RequestMethod[])request.annotationType().getMethod("method").invoke(request);        		
         		
-        		dao.saveOperation(m.getName(), microserviceURL+path[0], methods[0].name());
+        		dao.getMicroservices().saveOperation(m.getName(), microserviceURL+path[0], methods[0].name());
         	
         	 }
          }
@@ -148,23 +154,31 @@ public class ClientStarter implements ApplicationRunner {
     private String[] loadAllFragments(){
 		File dir=new File("fragments");
     	String compositions[]=dir.list();
+    	ArrayList<String> compoNames=new ArrayList<String>();
 
-    	for(String composition:compositions){
-    		File subDir=new File("fragments/"+composition);
-        	String files[]=subDir.list();	
-    		if(files!=null){
-	        	for(String file:files){
-		    		 String id=file.substring(0,file.indexOf("."));
-		    		 BPMNFragment fragment=new BPMNFragment();
-		    		 fragment.setId(id);
-		    		 fragment.setComposition(composition);
-		    		 String fileName="fragments/"+composition+"/"+file;
-		    		 dao.saveFragment(fragment, fileName);
-	        	}
+    	for(String compoDir:compositions){
+    		if(compoDir.charAt(0)!='.'){
+	    		File subDir=new File("fragments/"+compoDir);
+	        	String files[]=subDir.list();	
+	    		if(files!=null){
+	    			String[] composition=compoDir.split("-");
+	    			compoNames.add(composition[0]);
+		        	for(String file:files){
+		        		if(file.indexOf(".bpmn")>0){
+				    		 String id=file.substring(0,file.indexOf("."));
+				    		 BPMNFragment fragment=new BPMNFragment();
+				    		 fragment.setId(id);
+				    		 fragment.setComposition(composition[0]);
+				    		 fragment.setNumParticipants(new Integer(composition[1]));
+				    		 String fileName="fragments/"+compoDir+"/"+file;
+				    		 dao.getFragments().saveFragment(fragment, fileName);
+		        		}
+		        	}
+	    		}
     		}
     	}
     	
-    	return compositions;
+    	return compoNames.toArray(new String[0]);
     }
     
     

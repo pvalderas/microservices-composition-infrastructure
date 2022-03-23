@@ -15,8 +15,8 @@ include 'api'
 include 'services:webservice'
 */
 
-include   'BPMNUtils'
-project(':BPMNUtils').projectDir = new File(settingsDir, '../BPMNUtils')
+include   'CompositionUtils'
+project(':CompositionUtils').projectDir = new File(settingsDir, '../CompositionUtils')
 
 include   'BPMNDomainClasses'
 project(':BPMNDomainClasses').projectDir = new File(settingsDir, '../BPMNDomainClasses')

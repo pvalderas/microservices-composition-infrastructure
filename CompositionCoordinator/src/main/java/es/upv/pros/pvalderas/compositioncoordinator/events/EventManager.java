@@ -1,9 +1,14 @@
 package es.upv.pros.pvalderas.compositioncoordinator.events;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import org.camunda.bpm.engine.RuntimeService;
+import org.camunda.bpm.model.bpmn.Bpmn;
+import org.camunda.bpm.model.bpmn.BpmnModelInstance;
+import org.camunda.bpm.model.bpmn.instance.Message;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,50 +18,68 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 
+import es.upv.pros.pvalderas.composition.bpmn.domain.AdaptationResponse;
+import es.upv.pros.pvalderas.composition.bpmn.domain.AdaptedFragment;
+import es.upv.pros.pvalderas.composition.bpmn.domain.ChangeConfirmation;
+import es.upv.pros.pvalderas.composition.eventbroker.utils.BrokerConfig;
+import es.upv.pros.pvalderas.composition.eventbroker.utils.RabbitMQConfig;
+import es.upv.pros.pvalderas.compositioncoordinator.bpmn.FileManager;
+import es.upv.pros.pvalderas.compositioncoordinator.dao.DAO;
+
 @Component
 public class EventManager {
 	
-	private static String host;
-	private static String port;
-	private static String virtualHost;
-	private static String user;
-	private static String password;
-	
-	private static String brokerType;
-	
+	private static String REGISTERED="";
+
 	@Autowired
 	private RuntimeService runtimeService;
-
-	public void registerEventListener(String microservice, String composition) throws IOException, TimeoutException{
-		
-		switch(brokerType){
-			case "rabbitmq": rabbitmqRegisterEvent(microservice, composition); break;
-		}
 	
+	@Autowired
+	private DAO dao;
+	
+	@Autowired
+	private FileManager fileManager;
+	
+	private String thisMicroservice;
+	private String composition;
+	private List<String> messages;
+
+	public void registerEventListener(String thisMicroservice, String composition) throws IOException, TimeoutException{
+		if(!REGISTERED.contains(composition)){
+			REGISTERED=REGISTERED+composition+";";
+			this.thisMicroservice=thisMicroservice;
+			this.composition=composition;
+			switch(BrokerConfig.getBrokerType()){
+				case RabbitMQConfig.ID: rabbitmqRegisterEvent(); break;
+			}
+		}
+		messages=new ArrayList<String>();
+		BpmnModelInstance fragment=Bpmn.readModelFromFile(fileManager.getBPMNFile(composition));
+		for(Message message:fragment.getModelElementsByType(Message.class)){
+			messages.add(message.getName());
+		}
 	}
 	
-	private void rabbitmqRegisterEvent(String microservice, String composition) throws IOException, TimeoutException{
+	private void rabbitmqRegisterEvent() throws IOException, TimeoutException{	
+		Connection connection = RabbitMQConfig.getconnection();	
+		runtimeEvents(connection);
+		adaptationEvents(connection);
+		responseFromChanges(connection);
+		confirmationChanges(connection);
+	}
+	
+	private void runtimeEvents(Connection connection) throws IOException{
+		//String topic=thisMicroservice.toLowerCase()+"."+composition.toLowerCase()+".*";
+		String topic=composition.toLowerCase()+".*";
 		
-		String exchange=getRABBITMQ_EXCHANGE();
-		
-		ConnectionFactory factory = new ConnectionFactory();
-		factory.setHost(host);
-		factory.setPort(Integer.parseInt(port));
-		if(virtualHost!=null) factory.setVirtualHost(virtualHost);
-		if(user!=null) factory.setUsername(user);
-		if(password!=null) factory.setPassword(password);
-		Connection connection = factory.newConnection();
 		Channel channel = connection.createChannel();
-
-		channel.exchangeDeclare(exchange, BuiltinExchangeType.TOPIC);
-		 
+		channel.exchangeDeclare(RabbitMQConfig.RUNTIME_EXCHANGE, BuiltinExchangeType.TOPIC);
 		String COLA_CONSUMER = channel.queueDeclare().getQueue();
-		channel.queueBind(COLA_CONSUMER, exchange, microservice.toLowerCase()+"."+composition.toLowerCase()+".*");
+		channel.queueBind(COLA_CONSUMER, RabbitMQConfig.RUNTIME_EXCHANGE, topic);
 
 		Consumer consumer = new DefaultConsumer(channel) {
 			 @Override
@@ -69,10 +92,13 @@ public class EventManager {
 					try {
 						
 						messageJSON = new JSONObject(message);
-						Clients.currentClient.put(composition.toLowerCase(), messageJSON.getString("client")); 
-						runtimeService.createMessageCorrelation(messageJSON.getString("message")).correlate();
-					
-						System.out.println("Received Message: "+ message);
+						
+						if(messages.contains(messageJSON.getString("message"))){
+							Clients.currentClient.put(composition.toLowerCase(), messageJSON.getString("client")); 
+							runtimeService.createMessageCorrelation(messageJSON.getString("message")).correlate();	
+							System.out.println("Received Message: "+ message);
+						}
+						
 					} catch (JSONException e) {
 						e.printStackTrace();
 					}
@@ -81,66 +107,125 @@ public class EventManager {
 		 };
 		channel.basicConsume(COLA_CONSUMER, true, consumer);
 	}
-
-	public static String getRABBITMQ_EXCHANGE() {
-		return RABBITMQ_EXCHANGE!=null?RABBITMQ_EXCHANGE:DEFAULT_RABBITMQ_EXCHANGE;
-	}
-
-	public static void setRABBITMQ_EXCHANGE(String name) {
-		RABBITMQ_EXCHANGE = name;
-	}
-
-	public static String getHost() {
-		return host;
-	}
-
-	public static void setHost(String host) {
-		EventManager.host = host;
-	}
 	
-	public static String getVirtualHost() {
-		return virtualHost;
-	}
+	private void adaptationEvents(Connection connection) throws IOException{
+		String topic=thisMicroservice.toLowerCase()+"."+composition.toLowerCase();
+		
+		Channel channel = connection.createChannel();
+		channel.exchangeDeclare(RabbitMQConfig.ADAPTATION_EXCHANGE, BuiltinExchangeType.TOPIC);
+		String COLA_CONSUMER = channel.queueDeclare().getQueue();
+		channel.queueBind(COLA_CONSUMER, RabbitMQConfig.ADAPTATION_EXCHANGE, topic);
 
-	public static void setVirtualHost(String virtualHost) {
-		EventManager.virtualHost = virtualHost;
-	}
-
-	public static String getPort() {
-		return port;
-	}
-
-	public static void setPort(String port) {
-		EventManager.port = port;
-	}
-	
-	public static String getUser() {
-		return user;
-	}
-
-	public static void setUser(String user) {
-		EventManager.user = user;
-	}
-	
-	public static String getPassword() {
-		return password;
-	}
-
-	public static void setPassword(String password) {
-		EventManager.password = password;
-	}
-
-	public static String getBrokerType() {
-		return brokerType;
-	}
-
-	public static void setBrokerType(String brokerType) {
-		EventManager.brokerType = brokerType;
+		Consumer consumer = new DefaultConsumer(channel) {
+			 @Override
+			 public void handleDelivery(String consumerTag, Envelope envelope, 
+					 					AMQP.BasicProperties properties, byte[] body) throws IOException {
+				
+					String adaptation=new String(body);
+					
+					
+					try {
+						AdaptedFragment adaptedFragment=AdaptedFragment.parseJSON(adaptation);
+						dao.getParticipantChanges().save(adaptedFragment.getModifiedMicroservice(), 
+								-1, 
+								adaptedFragment.getComposition(), 
+								adaptedFragment.getChangesJSON(), 
+								adaptedFragment.getBpmn(),
+								adaptedFragment.getBpmnToConfirm(),
+								adaptedFragment.getType());
+		/*
+						switch(adaptedFragment.getType()){
+							case EvolutionProcess.AUTOMATIC: break;
+															 
+							case EvolutionProcess.AUTOMATIC_WITH_ACCEPTANCE: dao.saveParticipantChange(adaptedFragment.getMicroservice(), 
+																										-1, 
+																										composition, 
+																										"", 
+																										adaptedFragment.getBpmn(),
+																										adaptedFragment.getType());
+																			  break;
+						}
+			*/		
+						
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+				
+			 }
+		 };
+		channel.basicConsume(COLA_CONSUMER, true, consumer);
 	}
 	
 	
-	public static final String RABBITMQ="rabbitmq";
-	private static String RABBITMQ_EXCHANGE;
-	public static final String DEFAULT_RABBITMQ_EXCHANGE="processes";
+	private void responseFromChanges(Connection connection) throws IOException{
+		String topic=thisMicroservice.toLowerCase()+"."+composition.toLowerCase();
+		
+		Channel channel = connection.createChannel();
+		channel.exchangeDeclare(RabbitMQConfig.RESPONSE_EXCHANGE, BuiltinExchangeType.TOPIC);
+		String COLA_CONSUMER = channel.queueDeclare().getQueue();
+		channel.queueBind(COLA_CONSUMER, RabbitMQConfig.RESPONSE_EXCHANGE, topic);
+
+		Consumer consumer = new DefaultConsumer(channel) {
+			 @Override
+			 public void handleDelivery(String consumerTag, Envelope envelope, 
+					 					AMQP.BasicProperties properties, byte[] body) throws IOException {
+				
+					try {
+						AdaptationResponse adaptationResponse=AdaptationResponse.parseJSON(new String(body));
+						if(!adaptationResponse.getResponse()){
+							dao.getLocalChanges().rejectLocalChangesByComposition(composition);
+						}else if(adaptationResponse.getResponse()){
+							if(adaptationResponse.getFrom().equals("Global")) dao.getLocalChanges().acceptGlobalLocalChangesByComposition(composition);
+							else{
+								/*Integer accepted=dao.getLocalChanges().addTrueResponseToLocalChangeByComposition(adaptationResponse.getComposition());
+								if(accepted==dao.getLocalChanges().getAffectedParticipantsByComposition(composition)){
+									dao.getLocalChanges().acceptGlobalAndParticipantsLocalChangesByComposition(composition);
+								}*/
+								dao.getLocalChanges().addTrueResponseToLocalChangeByComposition(adaptationResponse.getComposition());
+							}
+						}
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+
+			 }
+		 };
+		channel.basicConsume(COLA_CONSUMER, true, consumer);
+	}
 	
+	
+	private void confirmationChanges(Connection connection) throws IOException{
+		String topic=composition.toLowerCase();
+		
+		Channel channel = connection.createChannel();
+		channel.exchangeDeclare(RabbitMQConfig.CONFIRMATION_EXCHANGE, BuiltinExchangeType.TOPIC);
+		String COLA_CONSUMER = channel.queueDeclare().getQueue();
+		channel.queueBind(COLA_CONSUMER, RabbitMQConfig.CONFIRMATION_EXCHANGE, topic);
+
+		Consumer consumer = new DefaultConsumer(channel) {
+			 @Override
+			 public void handleDelivery(String consumerTag, Envelope envelope, 
+					 					AMQP.BasicProperties properties, byte[] body) throws IOException {
+				
+					try {
+						ChangeConfirmation confirmation=ChangeConfirmation.parseJSON(new String(body));
+						
+						if(confirmation.getModifiedMicroservice().equalsIgnoreCase(thisMicroservice)){
+							dao.getLocalChanges().acceptGlobalAndParticipantsLocalChangesByComposition(composition);
+						}else{
+							if(confirmation.isConfirmed()){
+								dao.getParticipantChanges().confirmByComposition(confirmation.getComposition());
+							}else{
+								dao.getParticipantChanges().rejectByComposition(confirmation.getComposition());
+							}
+						}
+						
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+
+			 }
+		 };
+		channel.basicConsume(COLA_CONSUMER, true, consumer);
+	}
 }

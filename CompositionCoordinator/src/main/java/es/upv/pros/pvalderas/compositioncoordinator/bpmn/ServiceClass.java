@@ -8,7 +8,7 @@ import org.camunda.bpm.engine.impl.el.FixedValue;
 import org.camunda.bpm.model.bpmn.instance.ServiceTask;
 import org.springframework.stereotype.Component;
 
-import es.upv.pros.pvalderas.compositioncoordinator.http.HTTPClient;
+import es.upv.pros.pvalderas.composition.http.HTTPClient;
 
 @Component
 public class ServiceClass implements JavaDelegate

@@ -21,12 +21,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import es.upv.pros.pvalderas.composition.bpmn.domain.AdaptedFragment;
+import es.upv.pros.pvalderas.composition.bpmn.domain.AdaptedModel;
+import es.upv.pros.pvalderas.composition.bpmn.domain.AffectedParticipant;
 import es.upv.pros.pvalderas.composition.bpmn.domain.BPMNComposition;
 import es.upv.pros.pvalderas.composition.bpmn.domain.BPMNFragment;
+import es.upv.pros.pvalderas.composition.bpmn.domain.LocalChange;
 import es.upv.pros.pvalderas.composition.bpmn.domain.MicroService;
+import es.upv.pros.pvalderas.composition.http.HTTPClient;
 import es.upv.pros.pvalderas.fragmentmanager.bpmn.splitter.SplittedSimplifier;
 import es.upv.pros.pvalderas.fragmentmanager.bpmn.splitter.Splitter;
-import es.upv.pros.pvalderas.fragmentmanager.http.HTTPClient;
+import es.upv.pros.pvalderas.fragmentmanager.events.EventSender;
 
 @RestController
 @CrossOrigin
@@ -34,6 +39,9 @@ public class ServerHTTPController {
 	
 	 @Autowired
 	 JdbcTemplate jdbcTemplate;
+	 
+	 @Autowired
+	 EventSender eventSender;
 	 
 	
 	 @RequestMapping(
@@ -47,8 +55,10 @@ public class ServerHTTPController {
 		 
 		 Splitter splitter=new Splitter(composition.getXml());
 		 List<BPMNFragment> fragments=splitter.split();
+		
+		 Integer numParticipants=fragments.size();
 			 
-         System.out.println("Composition Split into Fragments");
+         System.out.println("Composition Split into "+numParticipants+" Fragments");
          
          for(BPMNFragment fragment: fragments){
         	 
@@ -64,8 +74,10 @@ public class ServerHTTPController {
              fragmentJSON.put("composition", fragment.getComposition());
              fragmentJSON.put("xml", fragment.getXml());
              fragmentJSON.put("microservice",fragment.getMicroservice());
+             fragmentJSON.put("numParticipants",numParticipants);
         	 
         	try{
+        		System.out.println(url);
         		HTTPClient.post(url, fragmentJSON.toString(), false, "application/json");
 	            System.out.println("Fragment sent to "+fragment.getMicroservice());
 	         }catch(Exception e){
@@ -73,6 +85,7 @@ public class ServerHTTPController {
 	         }
          }
 	 }
+	 
 	 
 	 @RequestMapping(
 			  value = "/microservices", 
@@ -107,13 +120,11 @@ public class ServerHTTPController {
 			  method = RequestMethod.POST,
 			  consumes = "application/json")
 	 @Transactional
-	 public void resendFragment(@RequestBody BPMNFragment fragment) throws DocumentException, JaxenException, IOException, JSONException {
+	 public String resendFragment(@RequestBody BPMNFragment fragment) throws DocumentException, JaxenException, IOException, JSONException {
 		 
 		 System.out.println("BPMN Fragment received!");
 		
-		 YamlPropertiesFactoryBean yamlFactory = new YamlPropertiesFactoryBean();
-         yamlFactory.setResources(new ClassPathResource("application.yml"));
-         Properties props = yamlFactory.getObject();
+		 Properties props = this.getProps();
          
          String GlobalCompositionManagerURL=props.getProperty("composition.globalcompositionmanager.url");
 
@@ -125,16 +136,78 @@ public class ServerHTTPController {
          fragmentJSON.put("xml", simplifierToSend.simplify());
 		 
          try{
-        	 HTTPClient.post(GlobalCompositionManagerURL+"/fragments", fragmentJSON.toString(), false, "application/json");
         	 System.out.println("Sent to the Global Composition Manager");
+        	 return HTTPClient.post(GlobalCompositionManagerURL+"/fragments", fragmentJSON.toString(), true, "application/json");	 
          }catch(Exception e){
         	 System.out.println("ERROR: Global Manager is not available");
+        	 return "0";
          }
-			 
-         
-		 
-
 		 
 	 }
 
+	 
+	 @RequestMapping(
+			  value = "/evolution", 
+			  method = RequestMethod.POST,
+			  consumes = "application/json",
+			  produces = "application/json")
+	 @Transactional
+	 public String resendCoordinationChange(@RequestBody LocalChange change) throws DocumentException, JaxenException, IOException, JSONException {
+		 
+		System.out.println("Local Change received!");
+		
+		Properties props = this.getProps();
+        String GlobalCompositionManagerURL=props.getProperty("composition.globalcompositionmanager.url");
+        
+        SplittedSimplifier dirtyWithColorsSimplifierToSend=new SplittedSimplifier(change.getComposition(),change.getDirtyXml()); 
+        SplittedSimplifier dirtySimplifierToSend=new SplittedSimplifier(change.getComposition(),change.getXml()); 
+        change.setDirtyXml(dirtyWithColorsSimplifierToSend.simplify());
+        change.setXml(dirtySimplifierToSend.simplify());
+		 
+        String adaptation="";
+        try{
+	       	adaptation=HTTPClient.post(GlobalCompositionManagerURL+"/evolution", change.toJSON(), true, "application/json");
+	       	System.out.println("Sent to the Global Composition Manager");
+        }catch(Exception e){
+        	System.out.println("ERROR: Global Manager is not available");
+        }
+        
+        return adaptation;
+	 }
+	 
+	 @RequestMapping(
+			  value = "/adaptation", 
+			  method = RequestMethod.POST,
+			  consumes = "application/json")
+	 public void evolveComposition(@RequestBody String adaptation) throws JSONException, DocumentException, JaxenException{
+		
+		System.out.println("BPMN Adapted Composition received!");
+
+		AdaptedModel adaptedModel=AdaptedModel.parseJSON(adaptation);
+			 
+		 
+		 Splitter splitter=new Splitter(adaptedModel.getBpmn());
+		 Splitter splitter2=new Splitter(adaptedModel.getBpmnToConfirm());
+		 for(AffectedParticipant a:adaptedModel.getAffectedParticipants()){
+			 String adaptedFragmentXML=splitter.split(a.getMicroservice());
+			 String adaptedFragmentXML2=splitter2.split(a.getMicroservice());
+			 AdaptedFragment adaptedFragment=new AdaptedFragment();
+			 adaptedFragment.setBpmn(adaptedFragmentXML);
+			 adaptedFragment.setBpmnToConfirm(adaptedFragmentXML2);
+			 adaptedFragment.setComposition(adaptedModel.getComposition());
+			 adaptedFragment.setMicroservice(a.getMicroservice());
+			 adaptedFragment.setModifiedMicroservice(adaptedModel.getModifiedParticipant());
+			 adaptedFragment.setType(a.getAdaptationType());
+			 adaptedFragment.setChangesJSON(a.getChangesJSON());
+			 eventSender.evolutionChange(adaptedFragment);
+		 }
+
+	 }
+	 
+	 private Properties getProps(){
+		 YamlPropertiesFactoryBean yamlFactory = new YamlPropertiesFactoryBean();
+	     yamlFactory.setResources(new ClassPathResource("application.yml"));
+	     Properties props = yamlFactory.getObject();
+	     return props;
+	 }
 }

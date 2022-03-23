@@ -1,0 +1,27 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+
+apply plugin: 'eclipse'
+apply plugin: 'java'
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+
+dependencies {
+   	compile group: 'org.dom4j', name: 'dom4j', version: '2.1.0'
+   	compile 'com.rabbitmq:amqp-client:5.2.0'
+}
+
+jar{
+    baseName = 'CompositionUtils'
+    version =  '0.1.0'
+}

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Local Fragment Viewer</title>
+
+  <link rel="stylesheet" href="vendor/bpmn-js/assets/diagram-js.css" />
+  <link rel="stylesheet" href="vendor/bpmn-js/assets/bpmn-font/css/bpmn-embedded.css" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+  <style>
+
+/***************************** loader *************************/
+.lds-hourglass {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+.lds-hourglass:after {
+  content: " ";
+  display: block;
+  border-radius: 50%;
+  width: 0;
+  height: 0;
+  margin: 8px;
+  box-sizing: border-box;
+  border: 32px solid white;
+  border-color: white transparent white transparent;
+  animation: lds-hourglass 1.2s infinite;
+}
+@keyframes lds-hourglass {
+  0% {
+    transform: rotate(0);
+    animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+  }
+  50% {
+    transform: rotate(900deg);
+    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+  }
+  100% {
+    transform: rotate(1800deg);
+  }
+}
+
+.loader_container{
+  position:absolute;
+  z-index:1000;
+  width:100%;
+  height:100%;
+  background-color: rgba(0,0,0,0.5);
+  margin:0;
+  display:none;
+}
+
+.loader_container div{
+  display:block;
+  margin:0 auto;
+  top:30%;
+}
+/***************************** end loader *************************/
+
+
+
+    body, html {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      font-family: sans-serif;
+    }
+    .modeler-parent {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    #modeler-container {
+      flex: 1;
+    }
+    #bottom-area{
+      border-top: solid 2px black;
+    }
+    .dirty{
+      display:none;
+      position:absolute;
+      top:0px;
+      left:0px;
+      width:100%;
+      height:100%;
+      background-color: rgba(255,255,255,0.5);
+      z-index:1000;
+    }
+
+  </style>
+
+</head>
+<body>
+
+  <!--<div class="dirty">
+    <div style="margin:450px auto 0px;padding:10px; width:90%;font-size:1.5em;text-align:center;color:grey;border-top:solid 1px;border-right:solid 1px;border-left:solid 1px">This is a dirty copy of the BPMN fragment. Changes must be confirmed by the other composition participants.</div>
+    <div style="margin:0 auto;width:90%;padding:20px;font-size:1.5em;text-align:center;color:grey;border-bottom:solid 1px;border-right:solid 1px;border-left:solid 1px">Confirmed by <span id="localChangeResponses"></span> of <span id="compositionParticipants"></span> affected participants.</div>
+  </div>-->
+  
+  
+  <div id="dirty-container"></div>
+
+  <div class="modeler-parent">
+    <div id="modeler-container"></div>
+    <div class="loader_container" id="sending-loader">
+          <div class="lds-hourglass"></div>
+    </div>
+    <div class="row" style="margin:0px" id="bottom-area"> 
+      <div id="properties-container" class="col-md-11"></div>
+      <div id="send-button-container" class="col-md-1"></div>
+    </div>
+  </div>
+
+  <nav class="navbar navbar-expand-lg fixed-top navbar-light bg-light" id="menu-container"></nav>
+  
+  <div id="fragment-dialog-container"></div>
+  <div id="operation-dialog-container"></div>
+  <div id="message-dialog-container"></div>
+  <div id="participant-changes-container"></div>
+
+  <script>
+    function showMessage(title,text){
+        $("#messageDialog .title").text(title);
+        $("#messageDialog .content").html(text);
+        $("#messageDialog").modal();
+    }
+  </script>
+
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+ 
+
+  <script type="text/javascript" src="app.js"></script>
+
+</body>
+</html>

@@ -6,6 +6,7 @@ public class BPMNFragment
     private String id;
     private String xml;
     private String microservice;
+    private Integer numParticipants;
     
     public String getComposition() {
         return this.composition;
@@ -38,4 +39,13 @@ public class BPMNFragment
     public void setMicroservice(final String microservice) {
         this.microservice = microservice;
     }
+
+	public Integer getNumParticipants() {
+		return numParticipants;
+	}
+
+	public void setNumParticipants(Integer numParticipants) {
+		this.numParticipants = numParticipants;
+	}
+    
 }
