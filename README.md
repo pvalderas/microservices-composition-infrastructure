@@ -131,4 +131,4 @@ In [microservices-composition-example](https://github.com/pvalderas/microservice
 
 #Knowledgment
 
-Grant MCIN/AEI/10.13039/501100011033 funded by: ![mcin](./mcin.png "Ministeria de Cienca e innovación" | width=25) <img src="./aei.png" alt="Agencia Estatal de Investigación" width="100px"> 
+Grant MCIN/AEI/10.13039/501100011033 funded by: <img src="./mcin.png" alt="Ministeria de Cienca e innovación" width="300px"> <img src="./aei.png" alt="Agencia Estatal de Investigación" width="100px"> 
