@@ -109,7 +109,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dialogs_ParticipantChanges_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./dialogs/ParticipantChanges.js */ "./app/dialogs/ParticipantChanges.js");
 /* harmony import */ var _dialogs_DirtyDialog_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./dialogs/DirtyDialog.js */ "./app/dialogs/DirtyDialog.js");
 /* harmony import */ var _properties_panel_SendFragmentButton_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./properties-panel/SendFragmentButton.js */ "./app/properties-panel/SendFragmentButton.js");
-var url = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''); //var url="http://localhost:8087";
+var url = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''); //var url="http://localhost:8082";
 
 /*var camundaExtensionModule = require('camunda-bpmn-moddle/lib');
 var camundaModdle = require('camunda-bpmn-moddle/resources/camunda');*/
@@ -159,21 +159,17 @@ const modeler = new bpmn_js_lib_Modeler__WEBPACK_IMPORTED_MODULE_2__["default"](
 
 var priority = 10000;
 modeler.on('element.dblclick', priority, function (event) {
-  return false;
-  /*var e = event.element;
-  if(e.businessObject.$instanceOf("bpmn:Participant") && (e.businessObject.name!=null) &&
-  (e.businessObject.name=="EVENT BUS" || 
-  e.businessObject.name.toLowerCase()==sessionStorage.getItem("microservicename").toLowerCase())) return false;*/
+  var e = event.element;
+  if (e.businessObject.$instanceOf("bpmn:Participant") && e.businessObject.name != null && (e.businessObject.name == "EVENT BUS" || e.businessObject.name.toLowerCase() == sessionStorage.getItem("microservicename").toLowerCase())) return false;
 }); //***************************************
 //***************************************
 // ADDING THE PROPERTY PANEL AND THE SEND BUTTON
 //***************************************
 
-/*const propertiesPanel = new PropertiesPanel({
+const propertiesPanel = new _properties_panel__WEBPACK_IMPORTED_MODULE_4__["default"]({
   container: $propertiesContainer,
   modeler
-});*/
-
+});
 react_dom__WEBPACK_IMPORTED_MODULE_0___default.a.render( /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_properties_panel_SendFragmentButton_js__WEBPACK_IMPORTED_MODULE_11__["default"], {
   url: url,
   modeler: modeler
@@ -235,15 +231,14 @@ class CustomContextPadProvider extends bpmn_js_lib_features_context_pad_ContextP
   }
 
   getContextPadEntries(element) {
-    return [];
-    /*var result = super.getContextPadEntries(element);
-     var e=element;
-    if(e.businessObject.$instanceOf("bpmn:Participant") && (e.businessObject.name!=null) &&
-            (e.businessObject.name=="EVENT BUS" || 
-            e.businessObject.name.toLowerCase()==sessionStorage.getItem("microservicename").toLowerCase())){
-        return [];
-     }
-     return result;*/
+    var result = super.getContextPadEntries(element);
+    var e = element;
+
+    if (e.businessObject.$instanceOf("bpmn:Participant") && e.businessObject.name != null && (e.businessObject.name == "EVENT BUS" || e.businessObject.name.toLowerCase() == sessionStorage.getItem("microservicename").toLowerCase())) {
+      return [];
+    }
+
+    return result;
   }
 
 } //CustomContextPadProvider.$inject = ['config.contextPad', 'injector', 'eventBus', 'contextPad', 'modeling', 'elementFactory', 'connect', 'create', 'popupMenu', 'canvas', 'rules', 'translate'];
@@ -1572,7 +1567,6 @@ class LocalFragmentManager {
     this.coordinatorRequirementsAnalyzer = new _CoordinatorRequirementsAnalyzer_js__WEBPACK_IMPORTED_MODULE_0__["default"](this.modeler);
     this.saveAsDirty = this.saveAsDirty.bind(this);
     this.saveLocalFragment = this.saveLocalFragment.bind(this);
-    this.saveOnlyLocalFragment = this.saveOnlyLocalFragment.bind(this);
     this.synchronizeFragmentWithBigPicture = this.synchronizeFragmentWithBigPicture.bind(this);
     this.saveDirtyLocalChanges = this.saveDirtyLocalChanges.bind(this);
   }
@@ -1592,8 +1586,6 @@ class LocalFragmentManager {
 
       var changes = _this.coordinatorRequirementsAnalyzer.getChanges(highlightModifications);
 
-      var id = sessionStorage.getItem("composition").replaceAll(" ", "") + "_" + sessionStorage.getItem("microservicename").replaceAll(" ", "") + "_fragment";
-
       const definitions = _this.modeler.get('canvas').getRootElement().businessObject.$parent;
 
       _this.modeler.saveXML({
@@ -1601,7 +1593,7 @@ class LocalFragmentManager {
       }, function (err, xml) {
         var dirtyFragmentXML = xml.replace(/"/g, "'");
         var datos = JSON.stringify({
-          "fragment": id,
+          "fragment": definitions.id,
           "composition": sessionStorage.getItem("composition"),
           "xml": newFragmentXML,
           "dirtyXml": dirtyFragmentXML,
@@ -1678,8 +1670,8 @@ class LocalFragmentManager {
   saveLocalFragment() {
     $("#sending-loader").css("display", "inline");
     const definitions = this.modeler.get('canvas').getRootElement().businessObject.$parent;
+    var id = definitions.id;
     var url = this.url;
-    var id = sessionStorage.getItem("composition").replaceAll(" ", "") + "_" + sessionStorage.getItem("microservicename").replaceAll(" ", "") + "_fragment";
     const synchronizeFragmentWithBigPicture = this.synchronizeFragmentWithBigPicture;
     this.modeler.saveXML({
       format: true
@@ -1710,49 +1702,6 @@ class LocalFragmentManager {
         } else {
           showMessage("Attention", "Error when updating the local fragment");
         }
-      }).catch(error => {
-        $("#sending-loader").css("display", "none");
-        console.log(error);
-        showMessage("Error", "Some error occurs when updating the local BPMN Fragment");
-      });
-    });
-  }
-
-  saveOnlyLocalFragment() {
-    $("#sending-loader").css("display", "inline");
-    const definitions = this.modeler.get('canvas').getRootElement().businessObject.$parent;
-    var url = this.url;
-    var id = sessionStorage.getItem("composition").replaceAll(" ", "") + "_" + sessionStorage.getItem("microservicename").replaceAll(" ", "") + "_fragment";
-    this.modeler.saveXML({
-      format: true
-    }, function (err, xml) {
-      if (err) {
-        showMessage("Error", "Could not save BPMN 2.0 diagram");
-        return console.error('Could not save BPMN 2.0 diagram', err);
-      }
-
-      var datos = JSON.stringify({
-        "id": id,
-        "microservice": sessionStorage.getItem("microservicename"),
-        "composition": sessionStorage.getItem("composition"),
-        "xml": xml.replace(/"/g, "'")
-      });
-      fetch(url + "/fragments", {
-        method: 'POST',
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: datos
-      }).then(function (response) {
-        return response.text();
-      }).then(result => {
-        if (result == "1") {
-          showMessage("Attention", "BPMN Fragment updated");
-        } else {
-          showMessage("Attention", "Error when updating the local fragment");
-        }
-
-        $("#sending-loader").css("display", "none");
       }).catch(error => {
         $("#sending-loader").css("display", "none");
         console.log(error);
@@ -2188,7 +2137,6 @@ class SendFragmentButton extends react__WEBPACK_IMPORTED_MODULE_0__["Component"]
   constructor(props) {
     super(props);
     this.sendFragment = this.sendFragment.bind(this);
-    this.saveFragment = this.saveFragment.bind(this);
     this.localFragmentManager = new _local_management_LocalFragmentManager__WEBPACK_IMPORTED_MODULE_1__["default"](this.props.modeler, this.props.url);
   }
 
@@ -2235,15 +2183,11 @@ class SendFragmentButton extends react__WEBPACK_IMPORTED_MODULE_0__["Component"]
     }
   }
 
-  saveFragment() {
-    this.localFragmentManager.saveOnlyLocalFragment();
-  }
-
   render() {
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("button", {
-      onClick: this.saveFragment,
+      onClick: this.sendFragment,
       className: "btn btn-primary"
-    }, "SAVE");
+    }, "SEND");
   }
 
 }

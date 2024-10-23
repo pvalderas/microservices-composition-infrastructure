@@ -1,8 +1,8 @@
-#Thu Mar 17 12:59:01 CET 2022
+#Wed Mar 23 21:06:56 CET 2022
 connection.gradle.distribution=GRADLE_DISTRIBUTION(VERSION(4.1))
 override.workspace.settings=true
 eclipse.preferences.version=1
 gradle.user.home=
 connection.project.dir=../../es.upv.pros.pvalderas.microservices.composition.example/GlobalCompositionManagerMicroservice
-offline.mode=false
 build.scans.enabled=false
+offline.mode=false

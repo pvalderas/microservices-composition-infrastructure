@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 import es.upv.pros.pvalderas.composition.bpmn.domain.AdaptationResponse;
 import es.upv.pros.pvalderas.composition.bpmn.domain.AdaptedModel;
@@ -130,7 +131,7 @@ public class ServerHTTPController {
 			
 			String compositionBPMNToConfirm=adaptedModel.getBpmnToConfirm();
 			String fragmentBPMNToConfirm=change.getXml();
-			System.out.println(compositionBPMNToConfirm);
+
 			Joiner joinerToConfirm=new Joiner(compositionBPMNToConfirm,fragmentBPMNToConfirm);
 			String newCompositionToConfirm=joinerToConfirm.join();
 			
@@ -163,6 +164,7 @@ public class ServerHTTPController {
 		 Properties props=getProps();
 		 String fragmentManagerURL=props.getProperty("composition.fragmentmanager.url");
 		 HTTPClient.post(fragmentManagerURL+"/adaptation", adaptedModel.toJSON(), false, "application/json");
+		 
 		 
 	     AdaptationResponse response=new AdaptationResponse();
 	     response.setComposition(adaptedModel.getComposition());
