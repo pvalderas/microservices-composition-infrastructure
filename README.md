@@ -129,7 +129,7 @@ eureka:
 
 In [microservices-composition-example](https://github.com/pvalderas/microservices-composition-example) you can find the implementation of a case study based on the process of purchase orders. In this example, it is explained how using the BPMN editor of the Global Composition Manager, how executing the composition, and how evolving a composition from both big picture created with the Global Composition Manager and the BPMN fragments available in each microservice.
 
-# Knowledgment
+# Acknowledgement
 
 Grant MCIN/AEI/10.13039/501100011033 funded by: 
 
